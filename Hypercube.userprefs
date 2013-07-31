@@ -1,10 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/MeshGenerator.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../Asteroids2/Assets/PlayerMovement.cs">
     <Files>
       <File FileName="../Asteroids2/Assets/PlayerMovement.cs" Line="6" Column="1" />
-      <File FileName="Assets/CreateHypercube.cs" Line="8" Column="1" />
-      <File FileName="Assets/MeshGenerator.cs" Line="17" Column="28" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

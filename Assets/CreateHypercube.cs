@@ -16,10 +16,45 @@ public class CreateHypercube : MonoBehaviour {
 
 	}
 	
+	void drawHypertetrahedronWithRotation(Matrix4x4 rotationMatrix) {
+		calc4Matrix();
+		Vector3[,] hyperVecs = createHypertetrahedronPointsWithMatrix(rotationMatrix);
+		for (int i = 0; i < hyperVecs.Length / 2; i++) {
+			Vector3 point1 = hyperVecs[0,0];
+			Vector3 point2 = hyperVecs[0,1];
+			if (!(point1.x == point2.x && point1.y == point2.y && point1.z == point2.z)) {
+				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1]);	
+			}
+		}
+
+	}
 	
+	Vector3[,] createHypertetrahedronPointsWithMatrix(Matrix4x4 rotationMatrix) {
+		Vector4[,] points = new Vector4[10, 2];
+		points[0,0] = new Vector4(1,1,1,-1); points[0,1] = new Vector4(1,-1,-1,-1);
+		points[1,0] = new Vector4(1,-1,-1,-1); points[1,1] = new Vector4(-1,1,-1,-1);
+		points[2,0] = new Vector4(-1,1,-1,-1); points[2,1] = new Vector4(-1,-1,1,-1);
+		points[3,0] = new Vector4(1,1,1,-1); points[3,1] = new Vector4(-1,-1,1,-1);
+		points[4,0] = new Vector4(1,1,1,-1); points[4,1] = new Vector4(-1,1,-1,-1);
+		points[5,0] = new Vector4(-1,-1,1,-1); points[5,1] = new Vector4(1,-1,-1,-1);
+		points[6,0] = new Vector4(1,1,1,-1); points[6,1] = new Vector4(0,0,0,Mathf.Sqrt(5) - 1);
+		points[7,0] = new Vector4(1,-1,-1,-1); points[7,1] = new Vector4(0,0,0,Mathf.Sqrt(5) - 1);
+		points[8,0] = new Vector4(-1,1,-1,-1); points[8,1] = new Vector4(0,0,0,Mathf.Sqrt(5) - 1);
+		points[9,0] = new Vector4(-1,-1,1,-1); points[9,1] = new Vector4(0,0,0,Mathf.Sqrt(5) - 1);
+		Vector3[,]hyperVecs = new Vector3[points.Length/2, 2];
+		for (int i = 0; i < points.Length/2; i++) {
+			Vector4 point1 = points[i,0];
+			Vector4 point2 = points[i,1];
+			point1 = multiply(rotationMatrix, point1);
+			point2 = multiply(rotationMatrix, point2);
+			hyperVecs[i,0] = projectTo3D(point1);
+			hyperVecs[i,1] = projectTo3D(point2);
+		}
+		return hyperVecs;
+	}
 	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix) {
 		calc4Matrix();
-		Vector3[,] hyperVecs = createPointsWithMatrix(rotationMatrix);
+		Vector3[,] hyperVecs = createHypercubePointsWithMatrix(rotationMatrix);
 		for (int i = 0; i < hyperVecs.Length / 2; i++) {
 			Vector3 point1 = hyperVecs[0,0];
 			Vector3 point2 = hyperVecs[0,1];
@@ -56,7 +91,7 @@ public class CreateHypercube : MonoBehaviour {
 		return new System.String(chars);
 	}
 	
-	Vector3[,] createPointsWithMatrix(Matrix4x4 matrix) {
+	Vector3[,] createHypercubePointsWithMatrix(Matrix4x4 matrix) {
 		string[,] strings = new string[64,2];
 		for (int i = 0; i <= 15; i++) {
 			string binVal = binaryValue(i);
@@ -68,7 +103,7 @@ public class CreateHypercube : MonoBehaviour {
 			}
 		}
 		string[,] hyperPoints = removeDuplicates(strings);
-		Vector3[,] hyperVecs = new Vector3[hyperPoints.Length,2];
+		Vector3[,] hyperVecs = new Vector3[hyperPoints.Length/2,2];
 		for (int k = 0; k < hyperPoints.Length / 2; k++) {
 			Vector4 point1 = convertToPoint(hyperPoints[k,0]);
 			Vector4 point2 = convertToPoint(hyperPoints[k,1]);
@@ -84,14 +119,28 @@ public class CreateHypercube : MonoBehaviour {
 		return hyperVecs;
 	}
 	
-	Vector4 multiply(Matrix4x4 mat, Vector4 point) {
-		Vector4 returnVal = new Vector4();
-		Vector4 row0 = mat.GetRow(0); Vector4 row1 = mat.GetRow(1); Vector4 row2 = mat.GetRow(2); Vector4 row3 = mat.GetRow(3);
-		returnVal.x = row0.x*point.x + row0.y*point.x + row0.z*point.x + row0.w*point.x;
-		returnVal.y = row1.x*point.y + row1.y*point.y + row1.z*point.y + row1.w*point.y;
-		returnVal.z = row2.x*point.z + row2.y*point.z + row2.z*point.z + row2.w*point.z;
-		returnVal.w = row3.x*point.w + row3.y*point.w + row3.z*point.w + row3.w*point.w;
-		return returnVal;
+	string[,] removeDuplicates(string[,] strings) {
+		// REMOVE DUPLICATES
+		string[,] hyperPoints = new string[32,2];
+		int nextIndex = 0;
+		for (int j = 0; j < strings.Length / 2; j++) {
+			bool newVal = true;
+			for (int l = 0; l < hyperPoints.Length / 2; l++) {
+				if (j != l &&(hyperPoints[l,0] != "" && hyperPoints[l,1] != "")) {
+					string compString1 = System.String.Concat(strings[j,0], strings[j,1]);
+					string compString2 = System.String.Concat(hyperPoints[l,0], hyperPoints[l,1]);
+					string reverseCompString2 = System.String.Concat(hyperPoints[l,1], hyperPoints[l,0]);
+					if (System.String.Compare(compString1, compString2, true) == 0 || System.String.Compare(compString1, reverseCompString2) == 0) {
+						newVal = false;
+					}
+				}
+			}
+			if (newVal) {
+				hyperPoints[nextIndex,0] = strings[j,0];
+				hyperPoints[nextIndex++,1] = strings[j,1];
+			}
+		}	
+		return hyperPoints;
 	}
 	
 	Vector4 convertToPoint(string inputString) {
@@ -116,7 +165,7 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	void calc4Matrix() {
-		
+		// Calculates the 4d perspective matrix to apply to the hyperpoints
 		Vector4 toVec = new Vector4(0,0,0,0);
 		float norm;
 		
@@ -148,30 +197,6 @@ public class CreateHypercube : MonoBehaviour {
 		product.w = -a.x*(b.y*c.z - c.y*b.z) + a.y*(b.x*c.z - c.x*b.z) - a.z*(b.x*c.y - c.x*b.y);
 		return product;
 	}
-	
-	string[,] removeDuplicates(string[,] strings) {
-		// REMOVE DUPLICATES
-		string[,] hyperPoints = new string[32,2];
-		int nextIndex = 0;
-		for (int j = 0; j < strings.Length / 2; j++) {
-			bool newVal = true;
-			for (int l = 0; l < hyperPoints.Length / 2; l++) {
-				if (j != l &&(hyperPoints[l,0] != "" && hyperPoints[l,1] != "")) {
-					string compString1 = System.String.Concat(strings[j,0], strings[j,1]);
-					string compString2 = System.String.Concat(hyperPoints[l,0], hyperPoints[l,1]);
-					string reverseCompString2 = System.String.Concat(hyperPoints[l,1], hyperPoints[l,0]);
-					if (System.String.Compare(compString1, compString2, true) == 0 || System.String.Compare(compString1, reverseCompString2) == 0) {
-						newVal = false;
-					}
-				}
-			}
-			if (newVal) {
-				hyperPoints[nextIndex,0] = strings[j,0];
-				hyperPoints[nextIndex++,1] = strings[j,1];
-			}
-		}	
-		return hyperPoints;
-	}
 		
 	void FixedUpdate() {
 		xyRot +=  System.Convert.ToInt32(Input.GetKey(KeyCode.Q)) * Mathf.Deg2Rad;
@@ -193,9 +218,16 @@ public class CreateHypercube : MonoBehaviour {
 		Matrix4x4 zwRotMatrix = zwRotationBy(zwRot);
 
 		Matrix4x4 combinedMatrix = multiply(multiply(multiply(zxRotMatrix, xwRotMatrix), multiply(xyRotMatrix, yzRotMatrix)), multiply(ywRotMatrix, zwRotMatrix));
-		drawHypercubeWithRotation(combinedMatrix);
+		drawHypertetrahedronWithRotation(combinedMatrix);
+		//drawHypercubeWithRotation(combinedMatrix);
 		meshGen.nextIndex = 0;
 		
+	}
+	
+	void Update () {
+		if (Input.GetKeyDown(KeyCode.P)) {
+			togglePerspective();	
+		}
 	}
 	
 	void togglePerspective() {
@@ -267,27 +299,24 @@ public class CreateHypercube : MonoBehaviour {
 	
 	Matrix4x4 multiply(Matrix4x4 src1, Matrix4x4 src2) {
 		Matrix4x4 dest = new Matrix4x4();
-		dest[0,0] = src1[0,0] * src2[0,0] + src1[0,1] * src2[1,0] + src1[0,2] * src2[2,0] + src1[0,3] * src2[3,0]; 
-		dest[0,1] = src1[0,0] * src2[0,1] + src1[0,1] * src2[1,1] + src1[0,2] * src2[2,1] + src1[0,3] * src2[3,1]; 
-		dest[0,2] = src1[0,0] * src2[0,2] + src1[0,1] * src2[1,2] + src1[0,2] * src2[2,2] + src1[0,3] * src2[3,2]; 
-		dest[0,3] = src1[0,0] * src2[0,3] + src1[0,1] * src2[1,3] + src1[0,2] * src2[2,3] + src1[0,3] * src2[3,3]; 
-		dest[1,0] = src1[1,0] * src2[0,0] + src1[1,1] * src2[1,0] + src1[1,2] * src2[2,0] + src1[1,3] * src2[3,0]; 
-		dest[1,1] = src1[1,0] * src2[0,1] + src1[1,1] * src2[1,1] + src1[1,2] * src2[2,1] + src1[1,3] * src2[3,1]; 
-		dest[1,2] = src1[1,0] * src2[0,2] + src1[1,1] * src2[1,2] + src1[1,2] * src2[2,2] + src1[1,3] * src2[3,2]; 
-		dest[1,3] = src1[1,0] * src2[0,3] + src1[1,1] * src2[1,3] + src1[1,2] * src2[2,3] + src1[1,3] * src2[3,3]; 
-		dest[2,0] = src1[2,0] * src2[0,0] + src1[2,1] * src2[1,0] + src1[2,2] * src2[2,0] + src1[2,3] * src2[3,0]; 
-		dest[2,1] = src1[2,0] * src2[0,1] + src1[2,1] * src2[1,1] + src1[2,2] * src2[2,1] + src1[2,3] * src2[3,1]; 
-		dest[2,2] = src1[2,0] * src2[0,2] + src1[2,1] * src2[1,2] + src1[2,2] * src2[2,2] + src1[2,3] * src2[3,2]; 
-		dest[2,3] = src1[2,0] * src2[0,3] + src1[2,1] * src2[1,3] + src1[2,2] * src2[2,3] + src1[2,3] * src2[3,3]; 
-		dest[3,0] = src1[3,0] * src2[0,0] + src1[3,1] * src2[1,0] + src1[3,2] * src2[2,0] + src1[3,3] * src2[3,0]; 
-		dest[3,1] = src1[3,0] * src2[0,1] + src1[3,1] * src2[1,1] + src1[3,2] * src2[2,1] + src1[3,3] * src2[3,1]; 
-		dest[3,2] = src1[3,0] * src2[0,2] + src1[3,1] * src2[1,2] + src1[3,2] * src2[2,2] + src1[3,3] * src2[3,2]; 
-		dest[3,3] = src1[3,0] * src2[0,3] + src1[3,1] * src2[1,3] + src1[3,2] * src2[2,3] + src1[3,3] * src2[3,3];
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				dest[i,j] = 0;
+				for (int k = 0; k < 4; k++) {
+					dest[i,j] += src1[i,k] * src2[k,j];
+				}
+			}
+		}
 		return dest;
 	}
-	void Update () {
-		if (Input.GetKeyDown(KeyCode.P)) {
-			togglePerspective();	
-		}
+	
+	Vector4 multiply(Matrix4x4 mat, Vector4 point) {
+		Vector4 returnVal = new Vector4();
+		Vector4 row0 = mat.GetRow(0); Vector4 row1 = mat.GetRow(1); Vector4 row2 = mat.GetRow(2); Vector4 row3 = mat.GetRow(3);
+		returnVal.x = row0.x*point.x + row0.y*point.x + row0.z*point.x + row0.w*point.x;
+		returnVal.y = row1.x*point.y + row1.y*point.y + row1.z*point.y + row1.w*point.y;
+		returnVal.z = row2.x*point.z + row2.y*point.z + row2.z*point.z + row2.w*point.z;
+		returnVal.w = row3.x*point.w + row3.y*point.w + row3.z*point.w + row3.w*point.w;
+		return returnVal;
 	}
 }
