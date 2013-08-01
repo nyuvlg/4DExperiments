@@ -8,11 +8,26 @@ public class CreateHypercube : MonoBehaviour {
 	float xyRot = 0f, yzRot = 0f, zxRot = 0f, xwRot = 0f, ywRot = 0f, zwRot = 0f;
 	bool secondPerspective;
 	MeshGenerator meshGen;
+	GameObject[] leftCylinders;
+	GameObject[] rightCylinders;
 	void Start () {
 		meshGen = (MeshGenerator)gameObject.GetComponent("MeshGenerator");
+		leftCylinders = new GameObject[32];
+		rightCylinders = new GameObject[32];
 		fromVec = new Vector4(4,0,0,0);
 		up = new Vector4(0,1,0,0);
 		over = new Vector4(0,0,1,0);
+		drawHypercubeWithRotation(Matrix4x4.identity, false);
+		
+		fromVec = new Vector4(2.83f, 2.83f, .01f, 0);
+		up = new Vector4(-.71f, .71f, 0, 0);
+		over = new Vector4(0, 0, 1, .02f);
+		drawHypercubeWithRotation(Matrix4x4.identity, true);
+		for (int i = 0; i < leftCylinders.Length; i++) {
+			leftCylinders[i].renderer.enabled = false;	
+			rightCylinders[i].renderer.enabled = false;
+		}
+		
 
 	}
 	
@@ -52,14 +67,19 @@ public class CreateHypercube : MonoBehaviour {
 		}
 		return hyperVecs;
 	}
-	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix) {
+	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix, bool leftProjection) {
 		calc4Matrix();
 		Vector3[,] hyperVecs = createHypercubePointsWithMatrix(rotationMatrix);
 		for (int i = 0; i < hyperVecs.Length / 2; i++) {
 			Vector3 point1 = hyperVecs[0,0];
 			Vector3 point2 = hyperVecs[0,1];
 			if (!(point1.x == point2.x && point1.y == point2.y && point1.z == point2.z)) {
-				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1]);	
+				GameObject go = meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1]);	
+				if (leftProjection) {
+					leftCylinders[i] = go;	
+				} else {
+					rightCylinders[i] = go;
+				}
 			}
 		}
 	}
@@ -199,29 +219,43 @@ public class CreateHypercube : MonoBehaviour {
 	}
 		
 	void FixedUpdate() {
-		xyRot +=  System.Convert.ToInt32(Input.GetKey(KeyCode.Q)) * Mathf.Deg2Rad;
-		Matrix4x4 xyRotMatrix = xyRotationBy(xyRot);
-		
-		yzRot += System.Convert.ToInt32(Input.GetKey(KeyCode.W)) * Mathf.Deg2Rad;
-		Matrix4x4 yzRotMatrix = yzRotationBy(yzRot);
-		
-		zxRot += System.Convert.ToInt32(Input.GetKey(KeyCode.E)) * Mathf.Deg2Rad;
-		Matrix4x4 zxRotMatrix = zxRotationBy(zxRot);
-		
-		xwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.R)) * Mathf.Deg2Rad;
-		Matrix4x4 xwRotMatrix = xwRotationBy(xwRot);
-		
-		ywRot += System.Convert.ToInt32(Input.GetKey(KeyCode.T)) * Mathf.Deg2Rad;
-		Matrix4x4 ywRotMatrix = ywRotationBy(ywRot);
-		
-		zwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.Y)) * Mathf.Deg2Rad;
-		Matrix4x4 zwRotMatrix = zwRotationBy(zwRot);
-
-		Matrix4x4 combinedMatrix = multiply(multiply(multiply(zxRotMatrix, xwRotMatrix), multiply(xyRotMatrix, yzRotMatrix)), multiply(ywRotMatrix, zwRotMatrix));
-		drawHypertetrahedronWithRotation(combinedMatrix);
+//		xyRot +=  System.Convert.ToInt32(Input.GetKey(KeyCode.Q)) * Mathf.Deg2Rad;
+//		Matrix4x4 xyRotMatrix = xyRotationBy(xyRot);
+//		
+//		yzRot += System.Convert.ToInt32(Input.GetKey(KeyCode.W)) * Mathf.Deg2Rad;
+//		Matrix4x4 yzRotMatrix = yzRotationBy(yzRot);
+//		
+//		zxRot += System.Convert.ToInt32(Input.GetKey(KeyCode.E)) * Mathf.Deg2Rad;
+//		Matrix4x4 zxRotMatrix = zxRotationBy(zxRot);
+//		
+//		xwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.R)) * Mathf.Deg2Rad;
+//		Matrix4x4 xwRotMatrix = xwRotationBy(xwRot);
+//		
+//		ywRot += System.Convert.ToInt32(Input.GetKey(KeyCode.T)) * Mathf.Deg2Rad;
+//		Matrix4x4 ywRotMatrix = ywRotationBy(ywRot);
+//		
+//		zwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.Y)) * Mathf.Deg2Rad;
+//		Matrix4x4 zwRotMatrix = zwRotationBy(zwRot);
+//
+//		Matrix4x4 combinedMatrix = multiply(multiply(multiply(zxRotMatrix, xwRotMatrix), multiply(xyRotMatrix, yzRotMatrix)), multiply(ywRotMatrix, zwRotMatrix));
+		//drawHypertetrahedronWithRotation(combinedMatrix);
 		//drawHypercubeWithRotation(combinedMatrix);
-		meshGen.nextIndex = 0;
+		//meshGen.nextIndex = 0;
 		
+	}
+	
+	public void displayLeftHypercube() {
+		for (int i = 0; i < rightCylinders.Length; i++) {
+			leftCylinders[i].renderer.enabled = true;	
+			rightCylinders[i].renderer.enabled = false;
+		}
+	}
+	
+	public void displayRightHypercube() {
+		for (int i = 0; i < rightCylinders.Length; i++) {
+			leftCylinders[i].renderer.enabled = false;	
+			rightCylinders[i].renderer.enabled = true;
+		}
 	}
 	
 	void Update () {

@@ -17,26 +17,27 @@ public class MeshGenerator : MonoBehaviour {
 		cylinders = new GameObject[32];
 	}
 	
-	public void drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint) {
-		if (startPoint != endPoint) {
+	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint) {
+		//if (startPoint != endPoint) {
 			float xD = endPoint.x - startPoint.x;
 			float yD = endPoint.y - startPoint.y;
 			float zD = endPoint.z - startPoint.z;
 			float distance = Mathf.Sqrt(xD*xD + yD*yD + zD*zD);
 			
-			if (GameObject.Find(System.String.Format("{0}", nextIndex))) {
+			/*if (GameObject.Find(System.String.Format("{0}", nextIndex))) {
 				cylinderPrefab = GameObject.Find(System.String.Format("{0}", nextIndex));
 				cylinderPrefab.transform.position = Vector3.zero;
 				cylinderPrefab.transform.rotation = Quaternion.identity;
-			} else {
+			} else {*/
 				cylinderPrefab = (GameObject)Instantiate(cylinderPrefab, Vector3.zero, Quaternion.identity);
-			}
+			//}
 			createCylinder(0.05f, distance, 8, cylinderPrefab);
 			cylinderPrefab.transform.Translate(startPoint);
 			cylinderPrefab.transform.LookAt(endPoint);	
 			cylinderPrefab.name = System.String.Format("{0}", nextIndex);
-			cylinders[nextIndex++] = cylinderPrefab;
-		}			 
+			//cylinders[nextIndex++] = cylinderPrefab;
+			return cylinderPrefab;
+		//}			 
 	}
 		
 	float calculateRotation(Vector2 startPoint, Vector2 endPoint) {
