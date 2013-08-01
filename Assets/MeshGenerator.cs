@@ -11,6 +11,7 @@ public class MeshGenerator : MonoBehaviour {
 	public Transform target;
 	GameObject[] cylinders;
 	public int nextIndex = 0;
+	public Material mat;
 
 	// Use this for initialization
 	void Start () {		
@@ -32,6 +33,7 @@ public class MeshGenerator : MonoBehaviour {
 				cylinderPrefab = (GameObject)Instantiate(cylinderPrefab, Vector3.zero, Quaternion.identity);
 			//}
 			createCylinder(0.05f, distance, 8, cylinderPrefab);
+			cylinderPrefab.renderer.material = mat;
 			cylinderPrefab.transform.Translate(startPoint);
 			cylinderPrefab.transform.LookAt(endPoint);	
 			cylinderPrefab.name = System.String.Format("{0}", nextIndex);

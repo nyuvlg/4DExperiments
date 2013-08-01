@@ -10,6 +10,7 @@ public class CreateHypercube : MonoBehaviour {
 	MeshGenerator meshGen;
 	GameObject[] leftCylinders;
 	GameObject[] rightCylinders;
+	
 	void Start () {
 		meshGen = (MeshGenerator)gameObject.GetComponent("MeshGenerator");
 		leftCylinders = new GameObject[32];
@@ -23,12 +24,11 @@ public class CreateHypercube : MonoBehaviour {
 		up = new Vector4(-.71f, .71f, 0, 0);
 		over = new Vector4(0, 0, 1, .02f);
 		drawHypercubeWithRotation(Matrix4x4.identity, true);
-		for (int i = 0; i < leftCylinders.Length; i++) {
-			leftCylinders[i].renderer.enabled = false;	
-			rightCylinders[i].renderer.enabled = false;
-		}
+//		for (int i = 0; i < leftCylinders.Length; i++) {
+//			//leftCylinders[i].renderer.enabled = (false);
+//			//rightCylinders[i].renderer.enabled = (false);
+//		}
 		
-
 	}
 	
 	void drawHypertetrahedronWithRotation(Matrix4x4 rotationMatrix) {
@@ -243,20 +243,28 @@ public class CreateHypercube : MonoBehaviour {
 		//meshGen.nextIndex = 0;
 		
 	}
-	
-	public void displayLeftHypercube() {
-		for (int i = 0; i < rightCylinders.Length; i++) {
-			leftCylinders[i].renderer.enabled = true;	
-			rightCylinders[i].renderer.enabled = false;
+	public void OnWillRenderObject(){
+		Debug.Log(Camera.current.name);
+		if (Camera.current.name == "CameraLeft") {
+			for (int i = 0; i < rightCylinders.Length; i++) {
+				leftCylinders[i].renderer.material.SetFloat("_Show",0.0f);
+				rightCylinders[i].renderer.material.SetFloat("_Show",1.0f);
+				//leftCylinders[i].renderer.enabled = false;
+				//rightCylinders[i].renderer.enabled = true;
+			}
+		} else if (Camera.current.name == "CameraRight") {
+			for (int i = 0; i < rightCylinders.Length; i++) {
+				leftCylinders[i].renderer.material.SetFloat("_Show",1.0f);
+				rightCylinders[i].renderer.material.SetFloat("_Show",0.0f);
+				//leftCylinders[i].renderer.enabled = true;
+				//rightCylinders[i].renderer.enabled = false;
+			}
 		}
+		
+		
+		
 	}
 	
-	public void displayRightHypercube() {
-		for (int i = 0; i < rightCylinders.Length; i++) {
-			leftCylinders[i].renderer.enabled = false;	
-			rightCylinders[i].renderer.enabled = true;
-		}
-	}
 	
 	void Update () {
 		if (Input.GetKeyDown(KeyCode.P)) {
