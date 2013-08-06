@@ -15,15 +15,17 @@ public class CreateHypercube : MonoBehaviour {
 		meshGen = (MeshGenerator)gameObject.GetComponent("MeshGenerator");
 		leftCylinders = new GameObject[32];
 		rightCylinders = new GameObject[32];
-		fromVec = new Vector4(4,0,0,0);
-		up = new Vector4(0,1,0,0);
-		over = new Vector4(0,0,1,0);
-		drawHypercubeWithRotation(Matrix4x4.identity, false);
-		
-		fromVec = new Vector4(2.83f, 2.83f, .01f, 0);
+		//fromVec = new Vector4(4,0,0,-0.25f);
+		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
+		//up = new Vector4(0,1,0,0);
 		up = new Vector4(-.71f, .71f, 0, 0);
+		//over = new Vector4(0,0,1,0);
 		over = new Vector4(0, 0, 1, .02f);
-		drawHypercubeWithRotation(Matrix4x4.identity, true);
+		drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		
+		//fromVec = new Vector4(4,0,0,0.25f);
+		fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
+		drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
 //		for (int i = 0; i < leftCylinders.Length; i++) {
 //			//leftCylinders[i].renderer.enabled = (false);
 //			//rightCylinders[i].renderer.enabled = (false);
@@ -38,7 +40,7 @@ public class CreateHypercube : MonoBehaviour {
 			Vector3 point1 = hyperVecs[0,0];
 			Vector3 point2 = hyperVecs[0,1];
 			if (!(point1.x == point2.x && point1.y == point2.y && point1.z == point2.z)) {
-				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1]);	
+				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], null);	
 			}
 		}
 
@@ -67,19 +69,17 @@ public class CreateHypercube : MonoBehaviour {
 		}
 		return hyperVecs;
 	}
-	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix, bool leftProjection) {
+	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix, bool leftProjection, GameObject[] gameObjects) {
 		calc4Matrix();
 		Vector3[,] hyperVecs = createHypercubePointsWithMatrix(rotationMatrix);
 		for (int i = 0; i < hyperVecs.Length / 2; i++) {
-			Vector3 point1 = hyperVecs[0,0];
-			Vector3 point2 = hyperVecs[0,1];
-			if (!(point1.x == point2.x && point1.y == point2.y && point1.z == point2.z)) {
-				GameObject go = meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1]);	
-				if (leftProjection) {
-					leftCylinders[i] = go;	
-				} else {
-					rightCylinders[i] = go;
-				}
+			//Vector3 point1 = hyperVecs[0,0];
+			//Vector3 point2 = hyperVecs[0,1];
+			GameObject go = meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], gameObjects[i]);	
+			if (leftProjection) {
+				leftCylinders[i] = go;	
+			} else {
+				rightCylinders[i] = go;
 			}
 		}
 	}
@@ -243,28 +243,29 @@ public class CreateHypercube : MonoBehaviour {
 		//meshGen.nextIndex = 0;
 		
 	}
+	
+	public void updateRotationsWithMove(Quaternion move) {
+		Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, move, Vector3.one);
+		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, -.03f));
+		Debug.Log(fromVec);
+		drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, .03f));
+		drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
+
+	}
 	public void OnWillRenderObject(){
-		Debug.Log(Camera.current.name);
 		if (Camera.current.name == "CameraLeft") {
 			for (int i = 0; i < rightCylinders.Length; i++) {
 				leftCylinders[i].renderer.material.SetFloat("_Show",0.0f);
 				rightCylinders[i].renderer.material.SetFloat("_Show",1.0f);
-				//leftCylinders[i].renderer.enabled = false;
-				//rightCylinders[i].renderer.enabled = true;
 			}
 		} else if (Camera.current.name == "CameraRight") {
 			for (int i = 0; i < rightCylinders.Length; i++) {
 				leftCylinders[i].renderer.material.SetFloat("_Show",1.0f);
 				rightCylinders[i].renderer.material.SetFloat("_Show",0.0f);
-				//leftCylinders[i].renderer.enabled = true;
-				//rightCylinders[i].renderer.enabled = false;
 			}
-		}
-		
-		
-		
+		}	
 	}
-	
 	
 	void Update () {
 		if (Input.GetKeyDown(KeyCode.P)) {

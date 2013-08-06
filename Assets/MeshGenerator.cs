@@ -18,28 +18,30 @@ public class MeshGenerator : MonoBehaviour {
 		cylinders = new GameObject[32];
 	}
 	
-	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint) {
+	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint, GameObject passedGO) {
 		//if (startPoint != endPoint) {
 			float xD = endPoint.x - startPoint.x;
 			float yD = endPoint.y - startPoint.y;
 			float zD = endPoint.z - startPoint.z;
 			float distance = Mathf.Sqrt(xD*xD + yD*yD + zD*zD);
-			
-			/*if (GameObject.Find(System.String.Format("{0}", nextIndex))) {
-				cylinderPrefab = GameObject.Find(System.String.Format("{0}", nextIndex));
-				cylinderPrefab.transform.position = Vector3.zero;
-				cylinderPrefab.transform.rotation = Quaternion.identity;
-			} else {*/
+		
+			if (!passedGO) {
 				cylinderPrefab = (GameObject)Instantiate(cylinderPrefab, Vector3.zero, Quaternion.identity);
-			//}
-			createCylinder(0.05f, distance, 8, cylinderPrefab);
+				//createCylinder(0.05f, distance, 8, cylinderPrefab);
+				createCylinder(0.05f, 1, 8, cylinderPrefab);
+				cylinderPrefab.transform.localScale = new Vector3(1, 1, distance);
+			} else {
+				passedGO.transform.position = Vector3.zero;
+				passedGO.transform.rotation = Quaternion.identity;
+				passedGO.transform.localScale = new Vector3(1, 1, distance);
+				cylinderPrefab = passedGO;
+			}
+		
 			cylinderPrefab.renderer.material = mat;
 			cylinderPrefab.transform.Translate(startPoint);
 			cylinderPrefab.transform.LookAt(endPoint);	
 			cylinderPrefab.name = System.String.Format("{0}", nextIndex);
-			//cylinders[nextIndex++] = cylinderPrefab;
 			return cylinderPrefab;
-		//}			 
 	}
 		
 	float calculateRotation(Vector2 startPoint, Vector2 endPoint) {
