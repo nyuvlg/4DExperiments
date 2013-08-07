@@ -8,29 +8,24 @@ public class MeshGenerator : MonoBehaviour {
 	Vector3[] normals;
 	int trianglesIndex = 0;
 	Vector2[] uvs;
-	GameObject[] cylinders;
 	public Material mat;
-
-	// Use this for initialization
-	void Start () {		
-		cylinders = new GameObject[32];
-	}
 	
-	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint, GameObject passedGO) {
+	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint, GameObject go) {
 		float xD = endPoint.x - startPoint.x;
 		float yD = endPoint.y - startPoint.y;
 		float zD = endPoint.z - startPoint.z;
 		float distance = Mathf.Sqrt(xD*xD + yD*yD + zD*zD);
 	
-		if (!passedGO) {
+		if (!go) {
 			cylinderPrefab = (GameObject)Instantiate(cylinderPrefab, Vector3.zero, Quaternion.identity);
 			createCylinder(0.05f, 1, 8, cylinderPrefab);
 			cylinderPrefab.transform.localScale = new Vector3(1, 1, distance);
 		} else {
-			passedGO.transform.position = Vector3.zero;
-			passedGO.transform.rotation = Quaternion.identity;
-			passedGO.transform.localScale = new Vector3(1, 1, distance);
-			cylinderPrefab = passedGO;
+			// Allow gameobjects to be passed to avoid redrawing the mesh every frame
+			go.transform.position = Vector3.zero;
+			go.transform.rotation = Quaternion.identity;
+			go.transform.localScale = new Vector3(1, 1, distance);
+			cylinderPrefab = go;
 		}
 	
 		cylinderPrefab.renderer.material = mat;
@@ -38,23 +33,8 @@ public class MeshGenerator : MonoBehaviour {
 		cylinderPrefab.transform.LookAt(endPoint);	
 		return cylinderPrefab;
 	}
-		
-	float calculateRotation(Vector2 startPoint, Vector2 endPoint) {
-		Vector2 legStartPoint = new Vector2(endPoint.x, startPoint.y);
-		Vector2 legEndPoint = new Vector2(endPoint.x, endPoint.y);
-		float legDistance = Mathf.Sqrt(Mathf.Pow((legEndPoint.x - legStartPoint.x), 2) + Mathf.Pow((legEndPoint.y - legStartPoint.y), 2));
-		float hypDistance = Mathf.Sqrt(Mathf.Pow((endPoint.x - startPoint.x), 2) + Mathf.Pow((endPoint.y - startPoint.y), 2));
-		
-		float angle = Mathf.Asin(legDistance / hypDistance) * (180.0f / Mathf.PI);
-		return angle;
-	}
-
-	private void addToTriangles(int[] points) {
-		for (int i = 0; i < points.Length; i++) {
-			triangles[trianglesIndex++] = points[i];
-		}
-	}
-//CYLINDER	
+	
+	// Cylinder creation
 	public void createCylinder(float radius, float height, int slices, GameObject go) {
 		Matrix4x4 rot = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(270f, 0f, 0f), Vector3.one);
 		createCylinder(radius, height, slices, go, rot);
@@ -154,6 +134,12 @@ public class MeshGenerator : MonoBehaviour {
 		for (int i = 0; i < verts.Length; i++) {
 			normals[i] = Vector3.Scale(verts[i], new Vector3(1.0f / radius, 1.0f / radius, 1.0f / radius));
 			normals[i].y = 0.0f;
+		}
+	}
+	
+	private void addToTriangles(int[] points) {
+		for (int i = 0; i < points.Length; i++) {
+			triangles[trianglesIndex++] = points[i];
 		}
 	}
 }

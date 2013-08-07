@@ -134,7 +134,6 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	string[,] removeDuplicates(string[,] strings) {
-		// REMOVE DUPLICATES
 		string[,] hyperPoints = new string[32,2];
 		int nextIndex = 0;
 		for (int j = 0; j < strings.Length / 2; j++) {
@@ -179,7 +178,7 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	void calc4Matrix() {
-		// Calculates the 4d perspective matrix to apply to the hyperpoints
+		// Calculates the 4d perspective matrix to apply to the 4D points
 		Vector4 toVec = new Vector4(0,0,0,0);
 		float norm;
 		
@@ -204,6 +203,7 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	Vector4 cross(Vector4 a, Vector4 b, Vector4 c) {
+		// Calculates the cross product of three Vector4's
 		Vector4 product = new Vector4();
 		product.x = a.y*(b.z*c.w - c.z*b.w) - a.z*(b.y*c.w - c.y*b.w) + a.w*(b.y*c.z - c.y*b.z);
 		product.y = -a.x*(b.z*c.w - c.z*b.w) + a.z*(b.x*c.w - c.x*b.w) - a.w*(b.x*c.z - c.x*b.z);
@@ -214,6 +214,7 @@ public class CreateHypercube : MonoBehaviour {
 		
 	void FixedUpdate() {
 		if (!usingOculus) {
+			// Calculate total 4d rotation from keys 'Q,W,E,R,T,Y' mapping to 'xy,yz,xz,xw,yw,zw' rotations
 			xyRot +=  System.Convert.ToInt32(Input.GetKey(KeyCode.Q)) * Mathf.Deg2Rad;
 			Matrix4x4 xyRotMatrix = xyRotationBy(xyRot);
 			
@@ -237,7 +238,9 @@ public class CreateHypercube : MonoBehaviour {
 		}		
 	}
 	
-	public void updateRotationsWithMove(Quaternion move) { // This method is utilized only for the Oculus integration
+	public void updateRotationsWithMove(Quaternion move) { 
+		// This method is utilized only for the Oculus integration
+		
 		// Ensure valid Quaternion
 		float sum = 0;
     	for (int i = 0; i < 4; ++i) {
@@ -255,7 +258,9 @@ public class CreateHypercube : MonoBehaviour {
 		drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
 
 	}
-	public void OnWillRenderObject(){ // This method is utilized only for the Oculus integration
+	public void OnWillRenderObject(){ 
+		// This method is utilized only for the Oculus integration
+		// Toggles the different 4d projections based on which camera is being displayed.
 		if (Camera.current.name == "CameraLeft") {
 			for (int i = 0; i < rightCylinders.Length; i++) {
 				leftCylinders[i].renderer.material.SetFloat("_Show",1.0f);
@@ -275,7 +280,9 @@ public class CreateHypercube : MonoBehaviour {
 		}
 	}
 	
-	void togglePerspective() { // This method is utilized only for the Oculus integration
+	void togglePerspective() { 
+		// Toggles perspective from keyboard input 'P'. 
+		// Switches between two perspectives found at: http://steve.hollasch.net/thesis/chapter4.html
 		secondPerspective = !secondPerspective;
 		if (secondPerspective) {
 			fromVec = new Vector4(2.83f, 2.83f, .01f, 0);
@@ -288,6 +295,8 @@ public class CreateHypercube : MonoBehaviour {
 		}
 	
 	}
+	
+	// 4D Rotation utility methods
 	Matrix4x4 xyRotationBy(float radians) {
 		Matrix4x4 rotMatrix = new Matrix4x4();
 		rotMatrix.SetRow(0, new Vector4(Mathf.Cos(radians), Mathf.Sin(radians), 0, 0));
@@ -343,6 +352,7 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	Matrix4x4 multiply(Matrix4x4 src1, Matrix4x4 src2) {
+		// Multiplies two 4x4 matrices
 		Matrix4x4 dest = new Matrix4x4();
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 4; j++) {
@@ -356,6 +366,7 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	Vector4 multiply(Matrix4x4 mat, Vector4 point) {
+		// Multiplies a 4x4 matrix by a vector4 
 		Vector4 returnVal = new Vector4();
 		Vector4 row0 = mat.GetRow(0); Vector4 row1 = mat.GetRow(1); Vector4 row2 = mat.GetRow(2); Vector4 row3 = mat.GetRow(3);
 		returnVal.x = row0.x*point.x + row0.y*point.x + row0.z*point.x + row0.w*point.x;
