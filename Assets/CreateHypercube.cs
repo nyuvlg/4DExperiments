@@ -8,12 +8,25 @@ public class CreateHypercube : MonoBehaviour {
 	float xyRot = 0f, yzRot = 0f, zxRot = 0f, xwRot = 0f, ywRot = 0f, zwRot = 0f;
 	bool secondPerspective;
 	MeshGenerator meshGen;
+	GameObject[] leftCylinders;
+	GameObject[] rightCylinders;
+	public bool usingOculus;
+	
 	void Start () {
 		meshGen = (MeshGenerator)gameObject.GetComponent("MeshGenerator");
-		fromVec = new Vector4(4,0,0,0);
-		up = new Vector4(0,1,0,0);
-		over = new Vector4(0,0,1,0);
-
+		leftCylinders = new GameObject[32];
+		rightCylinders = new GameObject[32];
+		
+		// Projection values pulled from http://steve.hollasch.net/thesis/chapter4.html
+		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
+		up = new Vector4(-.71f, .71f, 0, 0);
+		over = new Vector4(0, 0, 1, .02f);
+		drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		
+		if (usingOculus) {
+			fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
+			drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
+		}
 	}
 	
 	void drawHypertetrahedronWithRotation(Matrix4x4 rotationMatrix) {
@@ -23,7 +36,7 @@ public class CreateHypercube : MonoBehaviour {
 			Vector3 point1 = hyperVecs[0,0];
 			Vector3 point2 = hyperVecs[0,1];
 			if (!(point1.x == point2.x && point1.y == point2.y && point1.z == point2.z)) {
-				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1]);	
+				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], null);	
 			}
 		}
 
@@ -52,14 +65,15 @@ public class CreateHypercube : MonoBehaviour {
 		}
 		return hyperVecs;
 	}
-	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix) {
+	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix, bool leftProjection, GameObject[] gameObjects) {
 		calc4Matrix();
 		Vector3[,] hyperVecs = createHypercubePointsWithMatrix(rotationMatrix);
 		for (int i = 0; i < hyperVecs.Length / 2; i++) {
-			Vector3 point1 = hyperVecs[0,0];
-			Vector3 point2 = hyperVecs[0,1];
-			if (!(point1.x == point2.x && point1.y == point2.y && point1.z == point2.z)) {
-				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1]);	
+			GameObject go = meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], gameObjects[i]);	
+			if (leftProjection) {
+				leftCylinders[i] = go;	
+			} else {
+				rightCylinders[i] = go;
 			}
 		}
 	}
@@ -199,29 +213,60 @@ public class CreateHypercube : MonoBehaviour {
 	}
 		
 	void FixedUpdate() {
-		xyRot +=  System.Convert.ToInt32(Input.GetKey(KeyCode.Q)) * Mathf.Deg2Rad;
-		Matrix4x4 xyRotMatrix = xyRotationBy(xyRot);
+		if (!usingOculus) {
+			xyRot +=  System.Convert.ToInt32(Input.GetKey(KeyCode.Q)) * Mathf.Deg2Rad;
+			Matrix4x4 xyRotMatrix = xyRotationBy(xyRot);
+			
+			yzRot += System.Convert.ToInt32(Input.GetKey(KeyCode.W)) * Mathf.Deg2Rad;
+			Matrix4x4 yzRotMatrix = yzRotationBy(yzRot);
+			
+			zxRot += System.Convert.ToInt32(Input.GetKey(KeyCode.E)) * Mathf.Deg2Rad;
+			Matrix4x4 zxRotMatrix = zxRotationBy(zxRot);
+			
+			xwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.R)) * Mathf.Deg2Rad;
+			Matrix4x4 xwRotMatrix = xwRotationBy(xwRot);
+			
+			ywRot += System.Convert.ToInt32(Input.GetKey(KeyCode.T)) * Mathf.Deg2Rad;
+			Matrix4x4 ywRotMatrix = ywRotationBy(ywRot);
+			
+			zwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.Y)) * Mathf.Deg2Rad;
+			Matrix4x4 zwRotMatrix = zwRotationBy(zwRot);
+			Matrix4x4 combinedMatrix = multiply(multiply(multiply(zxRotMatrix, xwRotMatrix), multiply(xyRotMatrix, yzRotMatrix)), multiply(ywRotMatrix, zwRotMatrix));
+			//drawHypertetrahedronWithRotation(combinedMatrix);
+			drawHypercubeWithRotation(combinedMatrix, true, leftCylinders);
+		}		
+	}
+	
+	public void updateRotationsWithMove(Quaternion move) { // This method is utilized only for the Oculus integration
+		// Ensure valid Quaternion
+		float sum = 0;
+    	for (int i = 0; i < 4; ++i) {
+        	sum += move[i] * move[i];
+		}
+		float magnitudeInverse = 1 / Mathf.Sqrt(sum);
+		for (int i = 0; i < 4; ++i) {
+			 move[i] *= magnitudeInverse;  
+		}
 		
-		yzRot += System.Convert.ToInt32(Input.GetKey(KeyCode.W)) * Mathf.Deg2Rad;
-		Matrix4x4 yzRotMatrix = yzRotationBy(yzRot);
-		
-		zxRot += System.Convert.ToInt32(Input.GetKey(KeyCode.E)) * Mathf.Deg2Rad;
-		Matrix4x4 zxRotMatrix = zxRotationBy(zxRot);
-		
-		xwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.R)) * Mathf.Deg2Rad;
-		Matrix4x4 xwRotMatrix = xwRotationBy(xwRot);
-		
-		ywRot += System.Convert.ToInt32(Input.GetKey(KeyCode.T)) * Mathf.Deg2Rad;
-		Matrix4x4 ywRotMatrix = ywRotationBy(ywRot);
-		
-		zwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.Y)) * Mathf.Deg2Rad;
-		Matrix4x4 zwRotMatrix = zwRotationBy(zwRot);
+		Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, move, Vector3.one);
+		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, -.03f));
+		drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, .03f));
+		drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
 
-		Matrix4x4 combinedMatrix = multiply(multiply(multiply(zxRotMatrix, xwRotMatrix), multiply(xyRotMatrix, yzRotMatrix)), multiply(ywRotMatrix, zwRotMatrix));
-		drawHypertetrahedronWithRotation(combinedMatrix);
-		//drawHypercubeWithRotation(combinedMatrix);
-		meshGen.nextIndex = 0;
-		
+	}
+	public void OnWillRenderObject(){ // This method is utilized only for the Oculus integration
+		if (Camera.current.name == "CameraLeft") {
+			for (int i = 0; i < rightCylinders.Length; i++) {
+				leftCylinders[i].renderer.material.SetFloat("_Show",1.0f);
+				rightCylinders[i].renderer.material.SetFloat("_Show",0.0f);
+			}
+		} else if (Camera.current.name == "CameraRight") {
+			for (int i = 0; i < rightCylinders.Length; i++) {
+				leftCylinders[i].renderer.material.SetFloat("_Show",0.0f);
+				rightCylinders[i].renderer.material.SetFloat("_Show",1.0f);
+			}
+		}	
 	}
 	
 	void Update () {
@@ -230,7 +275,7 @@ public class CreateHypercube : MonoBehaviour {
 		}
 	}
 	
-	void togglePerspective() {
+	void togglePerspective() { // This method is utilized only for the Oculus integration
 		secondPerspective = !secondPerspective;
 		if (secondPerspective) {
 			fromVec = new Vector4(2.83f, 2.83f, .01f, 0);
