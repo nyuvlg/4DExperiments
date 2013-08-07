@@ -16,6 +16,8 @@ public class CreateHypercube : MonoBehaviour {
 		meshGen = (MeshGenerator)gameObject.GetComponent("MeshGenerator");
 		leftCylinders = new GameObject[32];
 		rightCylinders = new GameObject[32];
+		
+		// Projection values pulled from http://steve.hollasch.net/thesis/chapter4.html
 		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
 		up = new Vector4(-.71f, .71f, 0, 0);
 		over = new Vector4(0, 0, 1, .02f);
