@@ -19,12 +19,9 @@ public class CreateHypercube : MonoBehaviour {
 		rightCylinders = new GameObject[(hypercube) ? 32 : 10];
 		
 		// Projection values pulled from http://steve.hollasch.net/thesis/chapter4.html
-		fromVec = new Vector4(4,0,0,-.03f);
-		up = new Vector4(0,1,0,0);
-		over = new Vector4(0,0,1,0);
-		//fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
-		//up = new Vector4(-.71f, .71f, 0, 0);
-		//over = new Vector4(0, 0, 1, .02f);
+		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
+		up = new Vector4(-.71f, .71f, 0, 0);
+		over = new Vector4(0, 0, 1, .02f);
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
 		} else {
@@ -32,8 +29,7 @@ public class CreateHypercube : MonoBehaviour {
 		}
 		
 		if (usingOculus) {
-			//fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
-			fromVec = new Vector4(4,0,0, .03f);
+			fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
 			if (hypercube) {
 				drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
 			} else {
