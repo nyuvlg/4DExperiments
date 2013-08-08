@@ -283,6 +283,7 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	public void restrictFromVector() {
+		// Restricts the fromVector so that the hyperObject doesn't flip or stretch abnormally
 		fromVec.x = Mathf.Abs(fromVec.x);
 		fromVec.y = Mathf.Abs(fromVec.y);
 		if (fromVec.x + fromVec.y < 3.5f) {
