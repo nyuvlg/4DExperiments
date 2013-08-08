@@ -266,8 +266,7 @@ public class CreateHypercube : MonoBehaviour {
 		
 		Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, move, Vector3.one);
 		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, -.03f));
-		fromVec.x = Mathf.Abs(fromVec.x);
-		fromVec.y = Mathf.Abs(fromVec.y);
+		restrictFromVector();	
 		Debug.Log("from" + fromVec);
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
@@ -275,14 +274,25 @@ public class CreateHypercube : MonoBehaviour {
 			drawHypertetrahedronWithRotation(Matrix4x4.identity, true, leftCylinders);
 		}
 		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, .03f));
-		fromVec.x = Mathf.Abs(fromVec.x);
-		fromVec.y = Mathf.Abs(fromVec.y);
+		restrictFromVector();
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
 		} else {
 			drawHypertetrahedronWithRotation(Matrix4x4.identity, false, rightCylinders);
 		}
 
+	}
+	
+	public void restrictFromVector() {
+		fromVec.x = Mathf.Abs(fromVec.x);
+		fromVec.y = Mathf.Abs(fromVec.y);
+		if (fromVec.x + fromVec.y < 3.5f) {
+			if (fromVec.x < fromVec.y) {
+				fromVec.x = 3.5f - fromVec.y;	
+			} else {
+				fromVec.y = 3.5f - fromVec.x;	
+			}
+		}
 	}
 	public void OnWillRenderObject(){ 
 		// This method is utilized only for the Oculus integration
