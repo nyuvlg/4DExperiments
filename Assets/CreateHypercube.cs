@@ -11,32 +11,42 @@ public class CreateHypercube : MonoBehaviour {
 	GameObject[] leftCylinders;
 	GameObject[] rightCylinders;
 	public bool usingOculus;
+	public bool hypercube;
 	
 	void Start () {
 		meshGen = (MeshGenerator)gameObject.GetComponent("MeshGenerator");
-		leftCylinders = new GameObject[32];
-		rightCylinders = new GameObject[32];
+		leftCylinders = new GameObject[(hypercube) ? 32 : 10];
+		rightCylinders = new GameObject[(hypercube) ? 32 : 10];
 		
 		// Projection values pulled from http://steve.hollasch.net/thesis/chapter4.html
 		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
 		up = new Vector4(-.71f, .71f, 0, 0);
 		over = new Vector4(0, 0, 1, .02f);
-		drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		if (hypercube) {
+			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		} else {
+			drawHypertetrahedronWithRotation(Matrix4x4.identity, true, leftCylinders);
+		}
 		
 		if (usingOculus) {
 			fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
-			drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
+			if (hypercube) {
+				drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
+			} else {
+				drawHypertetrahedronWithRotation(Matrix4x4.identity, false, rightCylinders);
+			}
 		}
 	}
 	
-	void drawHypertetrahedronWithRotation(Matrix4x4 rotationMatrix) {
+	void drawHypertetrahedronWithRotation(Matrix4x4 rotationMatrix, bool leftProjection, GameObject[] gameObjects) {
 		calc4Matrix();
 		Vector3[,] hyperVecs = createHypertetrahedronPointsWithMatrix(rotationMatrix);
 		for (int i = 0; i < hyperVecs.Length / 2; i++) {
-			Vector3 point1 = hyperVecs[0,0];
-			Vector3 point2 = hyperVecs[0,1];
-			if (!(point1.x == point2.x && point1.y == point2.y && point1.z == point2.z)) {
-				meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], null);	
+			GameObject go = meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], gameObjects[i]);
+			if (leftProjection) {
+				leftCylinders[i] = go;	
+			} else {
+				rightCylinders[i] = go;
 			}
 		}
 
@@ -233,8 +243,11 @@ public class CreateHypercube : MonoBehaviour {
 			zwRot += System.Convert.ToInt32(Input.GetKey(KeyCode.Y)) * Mathf.Deg2Rad;
 			Matrix4x4 zwRotMatrix = zwRotationBy(zwRot);
 			Matrix4x4 combinedMatrix = multiply(multiply(multiply(zxRotMatrix, xwRotMatrix), multiply(xyRotMatrix, yzRotMatrix)), multiply(ywRotMatrix, zwRotMatrix));
-			//drawHypertetrahedronWithRotation(combinedMatrix);
-			drawHypercubeWithRotation(combinedMatrix, true, leftCylinders);
+			if (hypercube) {
+				drawHypercubeWithRotation(combinedMatrix, true, leftCylinders);
+			} else {
+				drawHypertetrahedronWithRotation(combinedMatrix, true, leftCylinders);
+			}
 		}		
 	}
 	
@@ -253,9 +266,17 @@ public class CreateHypercube : MonoBehaviour {
 		
 		Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, move, Vector3.one);
 		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, -.03f));
-		drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		if (hypercube) {
+			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+		} else {
+			drawHypertetrahedronWithRotation(Matrix4x4.identity, true, leftCylinders);
+		}
 		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, .03f));
-		drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
+		if (hypercube) {
+			drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
+		} else {
+			drawHypertetrahedronWithRotation(Matrix4x4.identity, false, rightCylinders);
+		}
 
 	}
 	public void OnWillRenderObject(){ 
