@@ -267,7 +267,6 @@ public class CreateHypercube : MonoBehaviour {
 		Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, move, Vector3.one);
 		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, -.03f));
 		restrictFromVector();	
-		Debug.Log("from" + fromVec);
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
 		} else {
