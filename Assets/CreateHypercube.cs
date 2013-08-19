@@ -5,6 +5,7 @@ public class CreateHypercube : MonoBehaviour {
 	
 	Vector4 Wa, Wb, Wc, Wd;
 	Vector4 fromVec, up, over;
+	Vector4 toVec;
 	float xyRot = 0f, yzRot = 0f, zxRot = 0f, xwRot = 0f, ywRot = 0f, zwRot = 0f;
 	bool secondPerspective;
 	MeshGenerator meshGen;
@@ -12,6 +13,7 @@ public class CreateHypercube : MonoBehaviour {
 	GameObject[] rightCylinders;
 	public bool usingOculus;
 	public bool hypercube;
+	private Quaternion oculusMove;
 	
 	void Start () {
 		meshGen = (MeshGenerator)gameObject.GetComponent("MeshGenerator");
@@ -19,9 +21,13 @@ public class CreateHypercube : MonoBehaviour {
 		rightCylinders = new GameObject[(hypercube) ? 32 : 10];
 		
 		// Projection values pulled from http://steve.hollasch.net/thesis/chapter4.html
-		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
-		up = new Vector4(-.71f, .71f, 0, 0);
-		over = new Vector4(0, 0, 1, .02f);
+		toVec = new Vector4(1,0,0,0);
+		fromVec = new Vector4(0,0,0,-.03f);
+		up = new Vector4(0,1,0,0);
+		over = new Vector4(0,0,1,0);
+//		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
+//		up = new Vector4(-.71f, .71f, 0, 0);
+//		over = new Vector4(0, 0, 1, .02f);
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
 		} else {
@@ -29,7 +35,8 @@ public class CreateHypercube : MonoBehaviour {
 		}
 		
 		if (usingOculus) {
-			fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
+//			fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
+			fromVec = new Vector4(0,0,0,.03f);
 			if (hypercube) {
 				drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
 			} else {
@@ -39,7 +46,7 @@ public class CreateHypercube : MonoBehaviour {
 	}
 	
 	void drawHypertetrahedronWithRotation(Matrix4x4 rotationMatrix, bool leftProjection, GameObject[] gameObjects) {
-		calc4Matrix();
+		calc4Matrix(leftProjection);
 		Vector3[,] hyperVecs = createHypertetrahedronPointsWithMatrix(rotationMatrix);
 		for (int i = 0; i < hyperVecs.Length / 2; i++) {
 			GameObject go = meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], gameObjects[i]);
@@ -54,6 +61,7 @@ public class CreateHypercube : MonoBehaviour {
 	
 	Vector3[,] createHypertetrahedronPointsWithMatrix(Matrix4x4 rotationMatrix) {
 		Vector4[,] points = new Vector4[10, 2];
+		// Vertices obtained at http://en.wikipedia.org/wiki/5-cell
 		points[0,0] = new Vector4(1,1,1,-1); points[0,1] = new Vector4(1,-1,-1,-1);
 		points[1,0] = new Vector4(1,-1,-1,-1); points[1,1] = new Vector4(-1,1,-1,-1);
 		points[2,0] = new Vector4(-1,1,-1,-1); points[2,1] = new Vector4(-1,-1,1,-1);
@@ -76,7 +84,7 @@ public class CreateHypercube : MonoBehaviour {
 		return hyperVecs;
 	}
 	void drawHypercubeWithRotation(Matrix4x4 rotationMatrix, bool leftProjection, GameObject[] gameObjects) {
-		calc4Matrix();
+		calc4Matrix(leftProjection);
 		Vector3[,] hyperVecs = createHypercubePointsWithMatrix(rotationMatrix);
 		for (int i = 0; i < hyperVecs.Length / 2; i++) {
 			GameObject go = meshGen.drawCylinderWithEndpoints(hyperVecs[i,0], hyperVecs[i,1], gameObjects[i]);	
@@ -187,9 +195,8 @@ public class CreateHypercube : MonoBehaviour {
 		return projectedPoint;
 	}
 	
-	void calc4Matrix() {
+	void calc4Matrix(bool leftProjection) {
 		// Calculates the 4d perspective matrix to apply to the 4D points
-		Vector4 toVec = new Vector4(0,0,0,0);
 		float norm;
 		
 	 	// Get the normalized Wd column-vector.
@@ -209,7 +216,6 @@ public class CreateHypercube : MonoBehaviour {
 		
 		// Calculate the Wc column-vector.
 		Wc = cross(Wd, Wa, Wb);
-
 	}
 	
 	Vector4 cross(Vector4 a, Vector4 b, Vector4 c) {
@@ -253,27 +259,65 @@ public class CreateHypercube : MonoBehaviour {
 	
 	public void updateRotationsWithMove(Quaternion move) { 
 		// This method is utilized only for the Oculus integration
-		
-		// Ensure valid Quaternion
+
+		// Ensure a valid Quaternion valuet
+		oculusMove = move;
 		float sum = 0;
     	for (int i = 0; i < 4; ++i) {
-        	sum += move[i] * move[i];
+        	sum += oculusMove[i] * oculusMove[i];
 		}
 		float magnitudeInverse = 1 / Mathf.Sqrt(sum);
 		for (int i = 0; i < 4; ++i) {
-			 move[i] *= magnitudeInverse;  
+			 oculusMove[i] *= magnitudeInverse;  
+		}
+		//Debug.Log(oculusMove.eulerAngles.x * 0.5f);
+		
+		float zAxis = oculusMove.eulerAngles.z;
+		if (zAxis > 180.0f) {
+			zAxis = 360.0f - (zAxis * 0.5f);	
+		} else {
+			zAxis *= 0.5f;	
 		}
 		
-		Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, move, Vector3.one);
-		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, -.03f));
-		restrictFromVector();	
+		float xAxis = oculusMove.eulerAngles.x;
+		if (xAxis > 180.0f) {
+			xAxis = 360.0f - (xAxis * 0.5f);	
+		} else {
+			xAxis *= 0.5f;	
+		}
+
+		Matrix4x4 rotation = xyRotationBy(Mathf.Deg2Rad * zAxis);
+		rotation = multiply(rotation, zxRotationBy(Mathf.Deg2Rad * oculusMove.eulerAngles.y));
+		rotation = multiply(rotation, yzRotationBy(Mathf.Deg2Rad * xAxis));
+		Vector4 moddedFromVec = multiply(rotation, new Vector4(-.03f, 0, 4, 0));
+		fromVec.w = moddedFromVec.x;
+		fromVec.y = moddedFromVec.y;
+		fromVec.z = moddedFromVec.w;
+		fromVec.x = moddedFromVec.z;
+		
+		Vector4 moddedUp = multiply(rotation, new Vector4(0,1,0,0));
+		up.w = moddedUp.x;
+		up.y = moddedUp.y;
+		up.z = moddedUp.w;
+		up.x = moddedUp.z;
+		
+		Vector4 moddedOver = multiply(rotation, new Vector4(0,0,0,1));
+		over.w = moddedOver.x;
+		over.y = moddedOver.y;
+		over.z = moddedOver.w;
+		over.x = moddedOver.z;
+
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
 		} else {
 			drawHypertetrahedronWithRotation(Matrix4x4.identity, true, leftCylinders);
 		}
-		fromVec = multiply(rotation, new Vector4(2.83f, 2.83f, .01f, .03f));
-		restrictFromVector();
+		moddedFromVec = multiply(rotation, new Vector4(.03f, 0, 4, 0));
+		fromVec.w = moddedFromVec.x;
+		fromVec.y = moddedFromVec.y;
+		fromVec.z = moddedFromVec.w;
+		fromVec.x = moddedFromVec.z;
+
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
 		} else {
@@ -405,10 +449,20 @@ public class CreateHypercube : MonoBehaviour {
 		// Multiplies a 4x4 matrix by a vector4 
 		Vector4 returnVal = new Vector4();
 		Vector4 row0 = mat.GetRow(0); Vector4 row1 = mat.GetRow(1); Vector4 row2 = mat.GetRow(2); Vector4 row3 = mat.GetRow(3);
-		returnVal.x = row0.x*point.x + row0.y*point.x + row0.z*point.x + row0.w*point.x;
-		returnVal.y = row1.x*point.y + row1.y*point.y + row1.z*point.y + row1.w*point.y;
-		returnVal.z = row2.x*point.z + row2.y*point.z + row2.z*point.z + row2.w*point.z;
-		returnVal.w = row3.x*point.w + row3.y*point.w + row3.z*point.w + row3.w*point.w;
+		returnVal.x = row0.x*point.x + row0.y*point.y + row0.z*point.z + row0.w*point.w;
+		returnVal.y = row1.x*point.x + row1.y*point.y + row1.z*point.z + row1.w*point.w;
+		returnVal.z = row2.x*point.x + row2.y*point.y + row2.z*point.z + row2.w*point.w;
+		returnVal.w = row3.x*point.x + row3.y*point.y + row3.z*point.z + row3.w*point.w;
+		return returnVal;
+	}
+	
+	Vector4 multiply(Vector4 point, Matrix4x4 mat) {
+		Vector4 returnVal = new Vector4();
+		Vector4 col0 = mat.GetColumn(0); Vector4 col1 = mat.GetColumn(1); Vector4 col2 = mat.GetColumn(2); Vector4 col3 = mat.GetColumn(3);
+		returnVal.x = col0.x*point.x + col0.y*point.y + col0.z*point.z + col0.w*point.w;
+		returnVal.y = col1.x*point.x + col1.y*point.y + col1.z*point.z + col1.w*point.w;
+		returnVal.z = col2.x*point.x + col2.y*point.y + col2.z*point.z + col2.w*point.w;
+		returnVal.w = col3.x*point.x + col3.y*point.y + col3.z*point.z + col3.w*point.w;
 		return returnVal;
 	}
 }
