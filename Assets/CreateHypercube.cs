@@ -25,9 +25,6 @@ public class CreateHypercube : MonoBehaviour {
 		fromVec = new Vector4(0,0,0,-.03f);
 		up = new Vector4(0,1,0,0);
 		over = new Vector4(0,0,1,0);
-//		fromVec = new Vector4(2.83f, 2.83f, .01f, -.03f);
-//		up = new Vector4(-.71f, .71f, 0, 0);
-//		over = new Vector4(0, 0, 1, .02f);
 		if (hypercube) {
 			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
 		} else {
@@ -35,7 +32,6 @@ public class CreateHypercube : MonoBehaviour {
 		}
 		
 		if (usingOculus) {
-//			fromVec = new Vector4(2.83f, 2.83f, .01f, .03f);
 			fromVec = new Vector4(0,0,0,.03f);
 			if (hypercube) {
 				drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
@@ -142,7 +138,6 @@ public class CreateHypercube : MonoBehaviour {
 			// Transform Points to (+-1,+-1,+-1,+-1);
 			point1 = point1 * 2.0f; point1.x -= 1; point1.y -= 1; point1.z -=1; point1.w -=1;
 			point2 = point2 * 2.0f; point2.x -=1; point2.y -=1; point2.z -=1; point2.w -=1;
-			// Multiply rotation matrix to points
 			point1 = multiply(matrix, point1);
 			point2 = multiply(matrix, point2);
 			hyperVecs[k,0] = projectTo3D(point1);
@@ -183,7 +178,7 @@ public class CreateHypercube : MonoBehaviour {
 		Vector3 projectedPoint = new Vector3();
 		float s,t;
 		Vector4 v;
-		float vAngle = Mathf.PI / 4.0f;
+		float vAngle = Mathf.PI / 10.0f;
 		// Perspective projection
 		t = 1.0f / Mathf.Tan(vAngle / 2.0f);
 		
@@ -271,71 +266,54 @@ public class CreateHypercube : MonoBehaviour {
 			 oculusMove[i] *= magnitudeInverse;  
 		}
 		
-		float xAxis = oculusMove.eulerAngles.x ;//* 0.5f;
-		if (xAxis >= 180.0f) {
-			xAxis = (xAxis - 360.0f) * 0.5f;	
-		} else {
-			xAxis = xAxis * 0.5f;
-		}
-		
-		float yAxis = oculusMove.eulerAngles.y ;//* 0.5f;
-		if (yAxis >= 180.0f) {
-			yAxis = (yAxis - 360.0f) * 0.5f;	
-		} else {
-			yAxis = yAxis * 0.5f;
-		}
-		float zAxis = oculusMove.eulerAngles.z ;//* 0.5f;
-		if (zAxis >= 180.0f) {
-			zAxis = (zAxis - 360.0f) * 0.125f;	
-		} else {
-			zAxis = zAxis * 0.125f;
-		}
-		Debug.Log(zAxis);
-		
-		//Debug.Log("X:" + xAxis + "	Y:" + yAxis + "		Z:" + zAxis);
-		
+		float xAxis = halveAngle(oculusMove.eulerAngles.x);
+		float yAxis = halveAngle(oculusMove.eulerAngles.y);
+		float zAxis = halveAngle(oculusMove.eulerAngles.z);
+				
 		Matrix4x4 rotation = xyRotationBy(Mathf.Deg2Rad * zAxis);
 		rotation = multiply(rotation, zxRotationBy(Mathf.Deg2Rad * yAxis));
-		rotation = multiply(rotation, yzRotationBy(Mathf.Deg2Rad * xAxis));
+		rotation = multiply(rotation, yzRotationBy(- Mathf.Deg2Rad * xAxis));
 		
-		//multiplyAndReplace(&fromVec, rotation, new Vector4(-.03f, 0, 4, 0));
 		Vector4 moddedFromVec = multiply(rotation, new Vector4(-.03f, 0, 4, 0));
-		fromVec.w = moddedFromVec.x;
-		fromVec.y = moddedFromVec.y;
-		fromVec.z = moddedFromVec.w;
-		fromVec.x = moddedFromVec.z;
-		
+		fromVec = reorderCoordinates(moddedFromVec);
 		Vector4 moddedUp = multiply(rotation, new Vector4(0,1,0,0));
-		up.w = moddedUp.x;
-		up.y = moddedUp.y;
-		up.z = moddedUp.w;
-		up.x = moddedUp.z;
-		
+		up = reorderCoordinates(moddedUp);
 		Vector4 moddedOver = multiply(rotation, new Vector4(0,0,0,1));
-		over.w = moddedOver.x;
-		over.y = moddedOver.y;
-		over.z = moddedOver.w;
-		over.x = moddedOver.z;
-
+		over = reorderCoordinates(moddedOver);
+		
+		Matrix4x4 trs = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(1,1,1));
 		if (hypercube) {
-			drawHypercubeWithRotation(Matrix4x4.identity, true, leftCylinders);
+			drawHypercubeWithRotation(trs, true, leftCylinders);
 		} else {
 			drawHypertetrahedronWithRotation(Matrix4x4.identity, true, leftCylinders);
 		}
 		moddedFromVec = multiply(rotation, new Vector4(.03f, 0, 4, 0));
-		fromVec.w = moddedFromVec.x;
-		fromVec.y = moddedFromVec.y;
-		fromVec.z = moddedFromVec.w;
-		fromVec.x = moddedFromVec.z;
+		fromVec = reorderCoordinates(moddedFromVec);
 
 		if (hypercube) {
-			drawHypercubeWithRotation(Matrix4x4.identity, false, rightCylinders);
+			drawHypercubeWithRotation(trs, false, rightCylinders);
 		} else {
 			drawHypertetrahedronWithRotation(Matrix4x4.identity, false, rightCylinders);
 		}
 
 	}
 	
+	private float halveAngle(float ang) {
+		if (ang >= 180.0f) {
+			return (ang - 360.0f) * 0.5f;	
+		} else {
+			return ang * 0.5f;
+		}
+	}
+	
+	private Vector4 reorderCoordinates(Vector4 inp) {
+		Vector4 reorderedVec = new Vector4();
+		reorderedVec.w = inp.x;
+		reorderedVec.y = inp.y;
+		reorderedVec.z = inp.w;
+		reorderedVec.x = inp.z;
+		return reorderedVec;
+	}
 	
 	public void restrictFromVector() {
 		// Restricts the fromVector so that the hyperObject doesn't flip or stretch abnormally
