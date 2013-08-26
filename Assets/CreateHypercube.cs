@@ -260,7 +260,7 @@ public class CreateHypercube : MonoBehaviour {
 	public void updateRotationsWithMove(Quaternion move) { 
 		// This method is utilized only for the Oculus integration
 
-		// Ensure a valid Quaternion valuet
+		// Ensure a valid Quaternion value
 		oculusMove = move;
 		float sum = 0;
     	for (int i = 0; i < 4; ++i) {
@@ -270,25 +270,35 @@ public class CreateHypercube : MonoBehaviour {
 		for (int i = 0; i < 4; ++i) {
 			 oculusMove[i] *= magnitudeInverse;  
 		}
-		//Debug.Log(oculusMove.eulerAngles.x * 0.5f);
 		
-		float zAxis = oculusMove.eulerAngles.z;
-		if (zAxis > 180.0f) {
-			zAxis = 360.0f - (zAxis * 0.5f);	
+		float xAxis = oculusMove.eulerAngles.x ;//* 0.5f;
+		if (xAxis >= 180.0f) {
+			xAxis = (xAxis - 360.0f) * 0.5f;	
 		} else {
-			zAxis *= 0.5f;	
+			xAxis = xAxis * 0.5f;
 		}
 		
-		float xAxis = oculusMove.eulerAngles.x;
-		if (xAxis > 180.0f) {
-			xAxis = 360.0f - (xAxis * 0.5f);	
+		float yAxis = oculusMove.eulerAngles.y ;//* 0.5f;
+		if (yAxis >= 180.0f) {
+			yAxis = (yAxis - 360.0f) * 0.5f;	
 		} else {
-			xAxis *= 0.5f;	
+			yAxis = yAxis * 0.5f;
 		}
-
+		float zAxis = oculusMove.eulerAngles.z ;//* 0.5f;
+		if (zAxis >= 180.0f) {
+			zAxis = (zAxis - 360.0f) * 0.125f;	
+		} else {
+			zAxis = zAxis * 0.125f;
+		}
+		Debug.Log(zAxis);
+		
+		//Debug.Log("X:" + xAxis + "	Y:" + yAxis + "		Z:" + zAxis);
+		
 		Matrix4x4 rotation = xyRotationBy(Mathf.Deg2Rad * zAxis);
-		rotation = multiply(rotation, zxRotationBy(Mathf.Deg2Rad * oculusMove.eulerAngles.y));
+		rotation = multiply(rotation, zxRotationBy(Mathf.Deg2Rad * yAxis));
 		rotation = multiply(rotation, yzRotationBy(Mathf.Deg2Rad * xAxis));
+		
+		//multiplyAndReplace(&fromVec, rotation, new Vector4(-.03f, 0, 4, 0));
 		Vector4 moddedFromVec = multiply(rotation, new Vector4(-.03f, 0, 4, 0));
 		fromVec.w = moddedFromVec.x;
 		fromVec.y = moddedFromVec.y;
@@ -325,6 +335,7 @@ public class CreateHypercube : MonoBehaviour {
 		}
 
 	}
+	
 	
 	public void restrictFromVector() {
 		// Restricts the fromVector so that the hyperObject doesn't flip or stretch abnormally
