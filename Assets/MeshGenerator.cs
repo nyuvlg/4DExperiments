@@ -21,7 +21,7 @@ public class MeshGenerator : MonoBehaviour {
 			createCylinder(0.05f, 1, 8, cylinderPrefab);
 			cylinderPrefab.transform.localScale = new Vector3(1, 1, distance);
 		} else {
-			// Allow gameobjects to be passed to avoid redrawing the mesh every frame
+			// Allow gameobjects to be passed in to avoid redrawing the mesh every frame
 			go.transform.position = Vector3.zero;
 			go.transform.rotation = Quaternion.identity;
 			go.transform.localScale = new Vector3(1, 1, distance);

@@ -62,8 +62,8 @@
      <Compile Include="Assets\OVR\Scripts\OVRPlayerController.cs" />
      <Compile Include="Assets\OVR\Scripts\OVRPresetManager.cs" />
      <Compile Include="Assets\OVR\Scripts\OVRUtils.cs" />
-     <Compile Include="Assets\ObjectRenderer.cs" />
-     <Compile Include="Assets\SimplexGenerator.cs" />
+     <Compile Include="Assets\Object4DRenderer.cs" />
+     <Compile Include="Assets\Simplex4DGenerator.cs" />
      <None Include="Assets\Normal-DiffuseFast.shader" />
      <None Include="Assets\OVR\OVRImageEffects\OVRLensCorrection_CA.shader" />
      <None Include="Assets\OVR\OVRImageEffects\OVRLensCorrection.shader" />
