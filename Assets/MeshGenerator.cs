@@ -3,6 +3,7 @@ using System.Collections;
 
 public class MeshGenerator : MonoBehaviour {
 	public GameObject cylinderPrefab;
+	public GameObject otherCylPref;
 	Vector3[] vertices;
 	int[] triangles;
 	Vector3[] normals;
@@ -10,27 +11,50 @@ public class MeshGenerator : MonoBehaviour {
 	Vector2[] uvs;
 	public Material mat;
 	
+	public void Start() {
+		otherCylPref = (GameObject)Instantiate(otherCylPref, Vector3.zero, Quaternion.identity);
+		//drawCylinderWithEndpoints(new Vector3(-1,0,0), new Vector3(1,0,0), null);
+		createCylinder(0.05f, 1, 8, otherCylPref);
+	}
+	public void Update() {
+		//cylinderPrefab.transform.LookAt(GameObject.Find("Sphere").transform.position);
+		//cylinderPrefab.transform.Rotate(new Vector3(90, 0, 0));
+	}
+	
 	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint, GameObject go) {
 		float xD = endPoint.x - startPoint.x;
 		float yD = endPoint.y - startPoint.y;
 		float zD = endPoint.z - startPoint.z;
 		float distance = Mathf.Sqrt(xD*xD + yD*yD + zD*zD);
-	
 		if (!go) {
+			Debug.Log("start" + startPoint + "end" + endPoint);
 			cylinderPrefab = (GameObject)Instantiate(cylinderPrefab, Vector3.zero, Quaternion.identity);
-			createCylinder(0.05f, 1, 8, cylinderPrefab);
-			cylinderPrefab.transform.localScale = new Vector3(1, 1, distance);
+			//createCylinder(0.05f, 1, 8, cylinderPrefab);
+			if (!(distance > 0)) {
+			cylinderPrefab.transform.localScale = Vector3.zero;
+			} else {
+			cylinderPrefab.transform.localScale = new Vector3(0.5f, 0.5f, distance);
+			}
 		} else {
 			// Allow gameobjects to be passed in to avoid redrawing the mesh every frame
 			go.transform.position = Vector3.zero;
 			go.transform.rotation = Quaternion.identity;
-			go.transform.localScale = new Vector3(1, 1, distance);
+			if (!(distance > 0)) {
+				go.transform.localScale = Vector3.zero;
+			} else {
+				go.transform.localScale = new Vector3(0.5f, 0.5f, distance);
+			}
 			cylinderPrefab = go;
 		}
+		//cylinderPrefab.renderer.material.color = Color.red;
 	
-		cylinderPrefab.renderer.material = mat;
+		//cylinderPrefab.renderer.material = mat;
+		//cylinderPrefab.transform.position = new Vector3(0,0,1);
 		cylinderPrefab.transform.Translate(startPoint);
-		cylinderPrefab.transform.LookAt(endPoint);	
+		cylinderPrefab.transform.LookAt(endPoint);
+		if (!(distance > 0)) {
+			cylinderPrefab.transform.localScale = Vector3.zero;
+		}
 		return cylinderPrefab;
 	}
 	
