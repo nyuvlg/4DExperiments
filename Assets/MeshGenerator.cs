@@ -11,29 +11,22 @@ public class MeshGenerator : MonoBehaviour {
 	Vector2[] uvs;
 	public Material mat;
 	
-	public void Start() {
-		otherCylPref = (GameObject)Instantiate(otherCylPref, Vector3.zero, Quaternion.identity);
-		//drawCylinderWithEndpoints(new Vector3(-1,0,0), new Vector3(1,0,0), null);
-		createCylinder(0.05f, 1, 8, otherCylPref);
-	}
-	public void Update() {
-		//cylinderPrefab.transform.LookAt(GameObject.Find("Sphere").transform.position);
-		//cylinderPrefab.transform.Rotate(new Vector3(90, 0, 0));
-	}
-	
-	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint, GameObject go) {
+	public GameObject drawCylinderWithEndpoints(Vector3 startPoint, Vector3 endPoint, float averageW, GameObject go) {
 		float xD = endPoint.x - startPoint.x;
 		float yD = endPoint.y - startPoint.y;
 		float zD = endPoint.z - startPoint.z;
+		float wScale = averageW / 4.0f;
 		float distance = Mathf.Sqrt(xD*xD + yD*yD + zD*zD);
+		if (!(distance > 0)) {
+			return go;
+		}
 		if (!go) {
-			Debug.Log("start" + startPoint + "end" + endPoint);
 			cylinderPrefab = (GameObject)Instantiate(cylinderPrefab, Vector3.zero, Quaternion.identity);
 			//createCylinder(0.05f, 1, 8, cylinderPrefab);
 			if (!(distance > 0)) {
 			cylinderPrefab.transform.localScale = Vector3.zero;
 			} else {
-			cylinderPrefab.transform.localScale = new Vector3(0.5f, 0.5f, distance);
+			cylinderPrefab.transform.localScale = new Vector3(0.5f + wScale, 0.5f + wScale, distance);
 			}
 		} else {
 			// Allow gameobjects to be passed in to avoid redrawing the mesh every frame
@@ -42,7 +35,7 @@ public class MeshGenerator : MonoBehaviour {
 			if (!(distance > 0)) {
 				go.transform.localScale = Vector3.zero;
 			} else {
-				go.transform.localScale = new Vector3(0.5f, 0.5f, distance);
+				go.transform.localScale = new Vector3(0.5f + wScale, 0.5f + wScale, distance);
 			}
 			cylinderPrefab = go;
 		}
@@ -50,11 +43,14 @@ public class MeshGenerator : MonoBehaviour {
 	
 		//cylinderPrefab.renderer.material = mat;
 		//cylinderPrefab.transform.position = new Vector3(0,0,1);
+		Renderer cylRend = (Renderer)cylinderPrefab.GetComponentInChildren<Renderer>();
+		if (averageW > 0.0f) {
+			cylRend.material.color = new Color(1,0,0, 1.0f);	
+		} else {
+			cylRend.material.color = new Color(0,1,0, 0.5f);	
+		}
 		cylinderPrefab.transform.Translate(startPoint);
 		cylinderPrefab.transform.LookAt(endPoint);
-		if (!(distance > 0)) {
-			cylinderPrefab.transform.localScale = Vector3.zero;
-		}
 		return cylinderPrefab;
 	}
 	
